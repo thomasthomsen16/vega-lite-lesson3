@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite-api@5.6.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-tooltip"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@5"></script>
+    <title>Document</title>
+</head>
+<body>
+  <div id="view"></div>
+  <div id="view2"></div>
+  <div id="view3"></div>
+  <div id="view4"></div>
+  <script>
+  // setup API options
+  const options = {
+      config: {
+          // Vega-Lite default configuration
+        },
+        init: (view) => {
+          // initialize tooltip handler
+          view.tooltip(new vegaTooltip.Handler().call);
+        },
+        view: {
+          // view constructor options
+          // remove the loader if you don't want to default to vega-datasets!
+          renderer: "canvas",
+        },
+      };
+
+      // register vega and vega-lite with the API
+      vl.register(vega, vegaLite, options);
+
+    // Now you can use the API
+
+    // Linking to Vega dataset
+
+    const dataSet = "https://raw.githubusercontent.com/vega/vega-datasets/refs/heads/main/data/movies.json";
+    
+    // The Vega-Lite specification
+
+    vl.markBar()
+        .data(dataSet)
+        .encode(
+            vl.x().fieldQ('Rotten Tomatoes Rating').bin({maxbins: 20}),
+            vl.y().fieldQ('IMDB Rating').bin({maxbins: 20}),
+            // vl.size().count(),
+            vl.color().count()
+        )
+        .width(500)
+        .height(400)
+        .render()
+        .then(viewElement => {
+            document.getElementById("view").appendChild(viewElement )
+        });
+
+    // A new Vega-lite specification
+
+    vl.markBar()
+        .data(dataSet)
+        .encode(
+            vl.x().q1('Rotten Tomatoes Rating'),
+            vl.x2().q3('Rotten Tomatoes Rating'),
+            vl.y().fieldN('Major Genre')
+                .sort(vl.median('Rotten Tomatoes Rating').order('descending'))
+        )
+    .width(500)
+    .render()
+        .then(viewElement2 => {
+            document.getElementById("view2").appendChild(viewElement2)
+        });
+        
+    // A new Vega-lite specification
+        
+    vl.markArea()
+    .data(dataSet)
+    .transform( 
+        vl.calculate('datum["Worldwide Gross"] - datum["US Gross"]').as('NonUS_Gross')
+
+        )
+        .encode(
+            vl.x().month('Release Date'),
+            vl.y().median('NonUS_Gross')
+        )
+        .width(500)
+        .render()
+            .then(viewElement3 => {
+                document.getElementById("view3").appendChild(viewElement3)
+            });
+
+    vl.markCircle()
+        .data(dataSet)
+        .transform(
+            vl.timeUnit('year', 'Release Date').as('Release_Year'),
+            vl.filter('datum["Release_Year"] <= 1970') 
+            )
+        .encode(
+            vl.x().fieldQ('Rotten Tomatoes Rating'),
+            vl.y().fieldQ('IMDB Rating')
+            )
+        .width(500)
+        .height(400)
+        .render()
+            .then(viewElement4 => {
+                    document.getElementById("view4").appendChild(viewElement4)
+                });
+    </script>
+    </body>
+</html>
